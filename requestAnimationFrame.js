@@ -4,30 +4,31 @@ function now() {
   return time[0] * 1000 + time[1] / 1000000
 }
 
-const TIMESTEP = 1000 / 30;
-const FIVE_SECONDS_IN_MS = 5000;
-let counter = 0;
+function animate() { 
+  let counter = 0;
+  let nextTick = now() + TIMESTEP;
+  let lastTick = now();
 
-let nextTick = now() + TIMESTEP;
-let lastTick = now();
-let maxFrames = FIVE_SECONDS_IN_MS / TIMESTEP
-
-function animate() {  
-  while (counter < maxFrames) {
+  // maxFrames used for debugging 
+  while (counter < MAX_FRAMES) {
     counter++
 
     while (now() < nextTick) {
       // Waste time
-      console.log((nextTick - now()) / TIMESTEP)
     }
 
     process.send('frame');
 
+
     nextTick += TIMESTEP;
-    // console.log(now() - lastTick)
 
     lastTick = now();
   }
 }
+
+const FPS = 60
+const TIMESTEP = 1000 / FPS;
+const ELAPSED = 10000;
+const MAX_FRAMES = ELAPSED / TIMESTEP
 
 animate()

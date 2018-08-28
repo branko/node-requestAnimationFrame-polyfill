@@ -1,42 +1,49 @@
+
 const { fork } = require('child_process');
 
-function now() {
-  const time = process.hrtime()
-  const seconds = time[0]
-  const nanoseconds = time[1]
-
-  return seconds * 1000 + nanoseconds / 1000000
-}
-
-let callbacks = []
+const callbacks = []
 
 const requestAnimationFrameChild = fork('requestAnimationFrame.js')
 
 requestAnimationFrameChild.on('message', msg => {
-  if (msg === 'frame') {
-    while (callbacks.length > 0) {
-      const cb = callbacks.shift();
-      cb(); 
-    }
-  }
+  const cb = callbacks.shift()
+  cb && cb();
 })
 
 requestAnimationFrameChild.on('close', msg => {
   console.log('requestAnimationFrameChild Closed')
 })
 
-const requestAnimationFrame = (cb) => {
+global.requestAnimationFrame = (cb) => {
   callbacks.push(cb);
 }
 
-let time = now();
-let last = now();
+function now() {
+  const time = process.hrtime()
 
-const animate = (timestamp) => {
-  requestAnimationFrame(animate)
-  // console.log(timestamp - time)
-  // console.log((now() - last).toFixed(4))
-  last = now()
+  return time[0] * 1000 + time[1] / 1000000
 }
 
-animate(now())
+const animate = () => {
+  counter++
+
+  if (counter === MAX_FRAMES) {
+    const elapsed = now() - start
+    console.log("Final count: ", counter)
+    console.log("Elapsed time: ", elapsed)
+    console.log("FPS: ", counter / (elapsed / 1000))
+    return
+  }
+
+  callbacks.push(animate)
+}
+
+const FPS = 60
+const TIMESTEP = 1000 / FPS;
+const ELAPSED = 10000;
+const MAX_FRAMES = ELAPSED / TIMESTEP;
+
+let counter = 0;
+let start = now();
+
+animate()
