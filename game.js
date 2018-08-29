@@ -1,23 +1,29 @@
 const { fork } = require('child_process');
+const requestAnimationFrameChild = fork('requestAnimationFrame.js')
 
 function now() {
   const time = process.hrtime()
-  const seconds = time[0]
-  const nanoseconds = time[1]
 
-  return seconds * 1000 + nanoseconds / 1000000
+  return time[0] * 1000 + time[1] / 1000000
 }
 
-let callbacks = []
+const FPS = 60
+const TIMESTEP = 1000 / FPS;
+const MAX_FRAMES = 500 // ELAPSED / TIMESTEP;
 
-const requestAnimationFrameChild = fork('requestAnimationFrame.js')
+const callbacks = []
+let start;
+let counter = 0;
+
 
 requestAnimationFrameChild.on('message', msg => {
-  if (msg === 'frame') {
-    while (callbacks.length > 0) {
-      const cb = callbacks.shift();
-      cb(); 
-    }
+  if (msg === 'start') {
+    start = now();
+
+    animate()
+  } else {
+    const cb = callbacks.shift()
+    cb && cb();
   }
 })
 
@@ -25,18 +31,17 @@ requestAnimationFrameChild.on('close', msg => {
   console.log('requestAnimationFrameChild Closed')
 })
 
-const requestAnimationFrame = (cb) => {
-  callbacks.push(cb);
-}
+requestAnimationFrame = cb => callbacks.push(cb)
 
-let time = now();
-let last = now();
+function animate() {
+  counter++
 
-const animate = (timestamp) => {
+  if (counter === MAX_FRAMES) {
+    const elapsed = now() - start
+    console.log("child FPS: ", counter / (elapsed / 1000))
+    return
+  }
+
   requestAnimationFrame(animate)
-  // console.log(timestamp - time)
-  // console.log((now() - last).toFixed(4))
-  last = now()
 }
 
-animate(now())

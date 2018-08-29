@@ -4,30 +4,33 @@ function now() {
   return time[0] * 1000 + time[1] / 1000000
 }
 
-const TIMESTEP = 1000 / 30;
-const FIVE_SECONDS_IN_MS = 5000;
-let counter = 0;
+function animate() { 
+  process.send('start')
 
-let nextTick = now() + TIMESTEP;
-let lastTick = now();
-let maxFrames = FIVE_SECONDS_IN_MS / TIMESTEP
+  let counter = 0;
+  let nextTick = now();
+  let lastTick = now();
 
-function animate() {  
-  while (counter < maxFrames) {
+  // maxFrames used for debugging 
+  while (counter < MAX_FRAMES) {
     counter++
 
     while (now() < nextTick) {
       // Waste time
-      console.log((nextTick - now()) / TIMESTEP)
     }
 
-    process.send('frame');
+    process.send(now());
 
     nextTick += TIMESTEP;
-    // console.log(now() - lastTick)
 
     lastTick = now();
   }
 }
 
+const MAX_FRAMES = 500; // ELAPSED / TIMESTEP
+const TIMESTEP = 1000 / 60;
+
+const start = now()
 animate()
+const elapsed = (now() - start) / 1000;
+console.log('rAF FPS: ', MAX_FRAMES / elapsed)
