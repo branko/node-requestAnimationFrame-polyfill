@@ -5,8 +5,10 @@ function now() {
 }
 
 function animate() { 
+  process.send('start')
+
   let counter = 0;
-  let nextTick = now() + TIMESTEP;
+  let nextTick = now();
   let lastTick = now();
 
   // maxFrames used for debugging 
@@ -17,8 +19,7 @@ function animate() {
       // Waste time
     }
 
-    process.send('frame');
-
+    process.send(now());
 
     nextTick += TIMESTEP;
 
@@ -26,9 +27,10 @@ function animate() {
   }
 }
 
-const FPS = 60
-const TIMESTEP = 1000 / FPS;
-const ELAPSED = 10000;
-const MAX_FRAMES = ELAPSED / TIMESTEP
+const MAX_FRAMES = 500; // ELAPSED / TIMESTEP
+const TIMESTEP = 1000 / 60;
 
+const start = now()
 animate()
+const elapsed = (now() - start) / 1000;
+console.log('rAF FPS: ', MAX_FRAMES / elapsed)
